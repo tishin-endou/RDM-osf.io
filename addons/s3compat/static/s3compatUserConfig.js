@@ -14,7 +14,8 @@ var osfHelpers = require('js/osfHelpers');
 var addonSettings = require('js/addonSettings');
 var ChangeMessageMixin = require('js/changeMessage');
 
-var s3compatSettings = require('json-loader!./settings.json');
+// Settings loaded via API instead of static import
+// var s3compatSettings = require('json-loader!./settings.json');
 
 var ExternalAccount = addonSettings.ExternalAccount;
 
@@ -25,8 +26,9 @@ function ViewModel(url) {
     var self = this;
 
     self.properName = 'S3 Compatible Storage';
-    self.availableServices = ko.observableArray(s3compatSettings['availableServices']);
-    self.selectedService = ko.observable(s3compatSettings['availableServices'][0]);
+    self.availableServices = ko.observableArray([]);
+    self.selectedService = ko.observable(null);
+    self.settingsLoaded = ko.observable(false);
     self.accessKey = ko.observable();
     self.secretKey = ko.observable();
     self.account_url = '/api/v1/settings/s3compat/accounts/';
@@ -34,14 +36,40 @@ function ViewModel(url) {
 
     ChangeMessageMixin.call(self);
 
+    /** Load settings from API */
+    self.loadSettings = function() {
+        return $.ajax({
+            url: '/api/v1/settings/s3compat/settings/',
+            type: 'GET',
+            dataType: 'json'
+        }).done(function(data) {
+            self.availableServices(data.availableServices);
+            if (data.availableServices.length > 0) {
+                self.selectedService(data.availableServices[0]);
+            }
+            self.settingsLoaded(true);
+        }).fail(function(xhr, status, error) {
+            Raven.captureMessage('Could not load S3 Compatible Storage settings', {
+                extra: {
+                    url: '/api/v1/settings/s3compat/settings/',
+                    status: status,
+                    error: error
+                }
+            });
+        });
+    };
+
     /** Reset all fields from S3 Compatible Storage credentials input modal */
     self.clearModal = function() {
         self.message('');
         self.messageClass('text-info');
-        self.selectedService(s3compatSettings['availableServices'][0]);
+        if (self.availableServices().length > 0) {
+            self.selectedService(self.availableServices()[0]);
+        }
         self.accessKey(null);
         self.secretKey(null);
     };
+
     /** Send POST request to authorize S3 Compatible Storage */
     self.connectAccount = function() {
         // Selection should not be empty
@@ -157,7 +185,10 @@ function ViewModel(url) {
         self.changeMessage('','');
     };
 
-    self.updateAccounts();
+    // Initialize: load settings first, then accounts
+    self.loadSettings().done(function() {
+        self.updateAccounts();
+    });
 }
 
 $.extend(ViewModel.prototype, ChangeMessageMixin.prototype);

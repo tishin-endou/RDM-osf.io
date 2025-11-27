@@ -7,6 +7,14 @@ api_routes = {
     'rules': [
         Rule(
             [
+                '/settings/s3compat/settings/',
+            ],
+            'get',
+            views.s3compat_get_settings,
+            json_renderer,
+        ),
+        Rule(
+            [
                 '/settings/s3compat/accounts/',
             ],
             'post',

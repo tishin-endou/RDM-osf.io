@@ -8,7 +8,8 @@ var Raven = require('raven-js');
 var $osf = require('js/osfHelpers');
 var oop = require('js/oop');
 
-var s3compatSettings = require('json-loader!./settings.json');
+// Settings loaded via API instead of static import
+// var s3compatSettings = require('json-loader!./settings.json');
 
 var OauthAddonFolderPicker = require('js/oauthAddonNodeConfig')._OauthAddonNodeConfigViewModel;
 
@@ -19,10 +20,15 @@ var s3compatFolderPickerViewModel = oop.extend(OauthAddonFolderPicker, {
         self.super.super.constructor.call(self, addonName, url, selector, folderPicker, tbOpts);
         self.super.construct.call(self, addonName, url, selector, folderPicker, opts, tbOpts);
         // Non-OAuth fields
-        self.availableServices = ko.observableArray(s3compatSettings['availableServices']);
-        self.selectedService = ko.observable(s3compatSettings['availableServices'][0]);
+        self.availableServices = ko.observableArray([]);
+        self.selectedService = ko.observable(null);
+        self.settingsLoaded = ko.observable(false);
         self.accessKey = ko.observable('');
         self.secretKey = ko.observable('');
+
+        // Load settings from API
+        self.loadSettings();
+
         // Treebeard config
         self.treebeardOptions = $.extend(
             {},
@@ -60,6 +66,29 @@ var s3compatFolderPickerViewModel = oop.extend(OauthAddonFolderPicker, {
             if (self.nodeHasAuth()) {
                 self.fetchAttachedService(self);
             }
+        });
+    },
+
+    loadSettings: function() {
+        var self = this;
+        return $.ajax({
+            url: '/api/v1/settings/s3compat/settings/',
+            type: 'GET',
+            dataType: 'json'
+        }).done(function(data) {
+            self.availableServices(data.availableServices);
+            if (data.availableServices.length > 0) {
+                self.selectedService(data.availableServices[0]);
+            }
+            self.settingsLoaded(true);
+        }).fail(function(xhr, status, error) {
+            Raven.captureMessage('Could not load S3 Compatible Storage settings', {
+                extra: {
+                    url: '/api/v1/settings/s3compat/settings/',
+                    status: status,
+                    error: error
+                }
+            });
         });
     },
 
@@ -142,7 +171,9 @@ var s3compatFolderPickerViewModel = oop.extend(OauthAddonFolderPicker, {
         var self = this;
         self.message('');
         self.messageClass('text-info');
-        self.selectedService(s3compatSettings['availableServices'][0]);
+        if (self.availableServices().length > 0) {
+            self.selectedService(self.availableServices()[0]);
+        }
         self.secretKey(null);
         self.accessKey(null);
     },

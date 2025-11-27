@@ -183,3 +183,11 @@ def s3compat_create_bucket(auth, node_addon, **kwargs):
         }, http_status.HTTP_400_BAD_REQUEST
 
     return {}
+
+@must_be_logged_in
+def s3compat_get_settings(auth, **kwargs):
+    """Returns s3compat settings for frontend"""
+    return {
+        'availableServices': settings.AVAILABLE_SERVICES,
+        'encryptUploads': settings.ENCRYPT_UPLOADS_DEFAULT,
+    }
