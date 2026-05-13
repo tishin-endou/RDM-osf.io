@@ -7,7 +7,7 @@
                           {"name": "SAKURA Cloud",
                            "host": "s3.isk01.sakurastorage.jp:443"},
                           {"name": "Wasabi",
-                           "host": "s3.wasabisys.com",
+                           "host": "s3.ap-northeast-1.wasabisys.com",
                            "bucketLocations": {
                              "us-east-1": {"name": "Northern Virginia 1", "host": "s3.wasabisys.com"},
                              "us-east-2": {"name": "Northern Virginia 2", "host": "s3.us-east-2.wasabisys.com"},
@@ -24,7 +24,7 @@
                              "eu-west-2": {"name": "Paris", "host": "s3.eu-west-2.wasabisys.com"},
                              "eu-west-3": {"name": "London 2", "host": "s3.eu-west-3.wasabisys.com"},
                              "eu-south-1": {"name": "Milan", "host": "s3.eu-south-1.wasabisys.com"},
-                             "": {"name": "Northern Virginia 1"}}},
+                             "": {"name": "Tokyo"}}},
                           {"name": "Kanazawa University Cloud(HyperStore)",
                            "host": "s3-kakuma.rdm.kanazawa-u.ac.jp",
                            "serverSideEncryption": false},
